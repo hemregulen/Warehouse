@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
+using System.Net;
 using Warehouse.Contact.Model;
 
 namespace Warehouse.Contact.Controllers
@@ -10,27 +12,35 @@ namespace Warehouse.Contact.Controllers
     [ApiController]
     public class HomeController : ControllerBase
     {
-        public IConfiguration Configuration { get; }
+        private readonly AppSettings _appSettings;
+
         protected string folderName = "";
-        public HomeController(IConfiguration configuration)
+        public HomeController(IOptions<AppSettings> appSettings)
         {
-            Configuration = configuration;
-            string? folderName = Configuration["folderName"]?.ToString();
+            _appSettings = appSettings.Value;
+             folderName = _appSettings.FolderName;
         }
-        [HttpPost("Get")]
-        public string Get(Request request)
+        [HttpPost("Post")]
+        public HttpStatusCode Post(Request request)
         {
             if (!Directory.Exists(folderName))
                 Directory.CreateDirectory(folderName);
             DeleteFile();
-            string fileName = $"{request.Name}-{request.IP}.txt";
-            string fullPath = Path.Combine(folderName, fileName);
-
             if (!Directory.Exists(folderName))
                 Directory.CreateDirectory(folderName);
-            System.IO.File.WriteAllText(fullPath, $"Name: {request.Name}\nIP: {request.IP}");
+            string fileName = $"{request.Name}.txt";
+            string fullPath = Path.Combine(folderName, fileName);
+            System.IO.File.WriteAllText(fullPath, $"{request.IP}");
+            return HttpStatusCode.OK;
+        }
+        [HttpPost("Get")]
+        public string Get(string Name)
+        {
+            string fullPath = Path.Combine(folderName, Name);
+            if (Directory.Exists(fullPath))
+                return System.IO.File.ReadAllText(fullPath+".txt");
 
-            return "";
+            return "Dosya bulanamadı";
         }
         private async Task DeleteFile()
         {
@@ -38,7 +48,7 @@ namespace Warehouse.Contact.Controllers
             foreach (string file in files)
             {
                 DateTime lastModified = System.IO.File.GetLastWriteTime(file);
-                if (lastModified < DateTime.Now.AddMinutes(-1))
+                if (lastModified < DateTime.Now.AddDays(-1))
                 {
                     try
                     {

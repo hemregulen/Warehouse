@@ -1,13 +1,18 @@
 using Microsoft.OpenApi.Models;
 using System.Net.Http.Headers;
 using System.Text;
+using Warehouse.Contact.Model;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// appsettings.json dosyasýndan ayarlarý yükleme
+builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+
+// Yapýlandýrma ayarlarýný DI konteynerine ekleme
+builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
+
 builder.Services.AddControllers();
 
-// Swagger'ý ekle
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "My API", Version = "v1" });
@@ -15,7 +20,6 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// Middleware - Swagger'a kimlik doðrulama ekle
 app.Use(async (context, next) =>
 {
     if (context.Request.Path.StartsWithSegments("/swagger"))
