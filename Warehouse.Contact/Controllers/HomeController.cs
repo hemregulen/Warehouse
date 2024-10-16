@@ -36,9 +36,9 @@ namespace Warehouse.Contact.Controllers
         [HttpPost("Get")]
         public string Get(string Name)
         {
-            string fullPath = Path.Combine(folderName, Name);
-            if (Directory.Exists(fullPath))
-                return System.IO.File.ReadAllText(fullPath+".txt");
+            string fullPath = Path.Combine(folderName, Name + ".txt");
+            if (System.IO.File.Exists(fullPath))
+                return System.IO.File.ReadAllText(fullPath);
 
             return "Dosya bulanamadı";
         }
